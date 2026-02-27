@@ -1,6 +1,3 @@
--- Inspired by Hyperion Lib GUI
--- Version: v1.0
-
 local Library = {}
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -8,41 +5,45 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
+local UIS = UserInputService
 
 getgenv().Toggles = {}
 getgenv().Options = {}
 getgenv().Library = Library
-
 
 Library.Flags = {}
 Library.FlagsFile = "LibraryConfig.json"
 Library.CurrentTheme = "Dark"
 Library.Themes = {
     Dark = {
-        Main = Color3.fromRGB(25, 25, 25),
-        Background = Color3.fromRGB(35, 35, 35),
-        Topbar = Color3.fromRGB(45, 45, 45),
-        Element = Color3.fromRGB(55, 55, 55),
-        ElementHover = Color3.fromRGB(65, 65, 65),
-        Accent = Color3.fromRGB(0, 120, 255),
+        Main = Color3.fromRGB(18, 18, 25),
+        Background = Color3.fromRGB(25, 25, 35),
+        Topbar = Color3.fromRGB(35, 35, 45),
+        Element = Color3.fromRGB(45, 45, 60),
+        ElementHover = Color3.fromRGB(55, 55, 75),
+        Accent = Color3.fromRGB(100, 150, 255),
+        AccentDark = Color3.fromRGB(70, 120, 220),
         Text = Color3.fromRGB(255, 255, 255),
-        TextDisabled = Color3.fromRGB(150, 150, 150),
-        Red = Color3.fromRGB(255, 50, 50),
-        Green = Color3.fromRGB(50, 255, 50),
-        Blue = Color3.fromRGB(50, 150, 255),
+        TextDisabled = Color3.fromRGB(150, 150, 160),
+        Red = Color3.fromRGB(255, 80, 80),
+        Green = Color3.fromRGB(80, 255, 120),
+        Blue = Color3.fromRGB(80, 160, 255),
+        Shadow = Color3.fromRGB(0, 0, 0),
     },
     Light = {
-        Main = Color3.fromRGB(240, 240, 240),
-        Background = Color3.fromRGB(220, 220, 220),
-        Topbar = Color3.fromRGB(200, 200, 200),
-        Element = Color3.fromRGB(180, 180, 180),
-        ElementHover = Color3.fromRGB(160, 160, 160),
+        Main = Color3.fromRGB(240, 240, 245),
+        Background = Color3.fromRGB(225, 225, 235),
+        Topbar = Color3.fromRGB(210, 210, 225),
+        Element = Color3.fromRGB(195, 195, 210),
+        ElementHover = Color3.fromRGB(180, 180, 200),
         Accent = Color3.fromRGB(0, 100, 200),
-        Text = Color3.fromRGB(0, 0, 0),
-        TextDisabled = Color3.fromRGB(100, 100, 100),
+        AccentDark = Color3.fromRGB(0, 80, 160),
+        Text = Color3.fromRGB(20, 20, 30),
+        TextDisabled = Color3.fromRGB(100, 100, 120),
         Red = Color3.fromRGB(200, 0, 0),
         Green = Color3.fromRGB(0, 150, 0),
         Blue = Color3.fromRGB(0, 100, 200),
+        Shadow = Color3.fromRGB(0, 0, 0),
     }
 }
 
@@ -52,13 +53,15 @@ function Library:CreateWindow(options)
     
     window.Title = options.Title or "Library"
     window.Footer = options.Footer or ""
-    window.Size = options.Size or UDim2.new(0, 600, 0, 400)
-    window.Position = options.Position or UDim2.new(0.5, -300, 0.5, -200)
+    window.Size = options.Size or UDim2.new(0, 650, 0, 450)
+    window.Position = options.Position or UDim2.new(0.5, -325, 0.5, -225)
     window.NotifySide = options.NotifySide or "Right"
-    window.Dragging = { false, false }
+    window.Dragging = { false, { x = 0, y = 0 } }
+    window.MinSize = options.MinSize or UDim2.new(0, 400, 0, 300)
+    window.Resizable = options.Resizable or true
     
     window.Gui = Instance.new("ScreenGui")
-    window.Gui.Name = "LibraryGui"
+    window.Gui.Name = "ModernLibraryGui"
     window.Gui.ResetOnSpawn = false
     window.Gui.Parent = game:GetService("CoreGui")
     
@@ -71,59 +74,100 @@ function Library:CreateWindow(options)
     window.Main.ClipsDescendants = true
     window.Main.Parent = window.Gui
     
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = window.Main
+    
     window.Shadow = Instance.new("ImageLabel")
     window.Shadow.Name = "Shadow"
-    window.Shadow.Size = UDim2.new(1, 40, 1, 40)
-    window.Shadow.Position = UDim2.new(0, -20, 0, -20)
+    window.Shadow.Size = UDim2.new(1, 30, 1, 30)
+    window.Shadow.Position = UDim2.new(0, -15, 0, -15)
     window.Shadow.BackgroundTransparency = 1
-    window.Shadow.Image = "rbxassetid://6015897843"
-    window.Shadow.ImageColor3 = Color3.new(0, 0, 0)
-    window.Shadow.ImageTransparency = 0.5
+    window.Shadow.Image = "rbxassetid://13170732930"
+    window.Shadow.ImageColor3 = Library.Themes[Library.CurrentTheme].Shadow
+    window.Shadow.ImageTransparency = 0.6
     window.Shadow.ScaleType = Enum.ScaleType.Slice
     window.Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
     window.Shadow.Parent = window.Main
     
     window.Topbar = Instance.new("Frame")
     window.Topbar.Name = "Topbar"
-    window.Topbar.Size = UDim2.new(1, 0, 0, 30)
+    window.Topbar.Size = UDim2.new(1, 0, 0, 35)
     window.Topbar.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Topbar
     window.Topbar.BorderSizePixel = 0
     window.Topbar.Parent = window.Main
     
+    local topCorner = Instance.new("UICorner")
+    topCorner.CornerRadius = UDim.new(0, 8)
+    topCorner.Parent = window.Topbar
+    
+    local topBarStroke = Instance.new("UIStroke")
+    topBarStroke.Thickness = 1
+    topBarStroke.Color = Library.Themes[Library.CurrentTheme].Element
+    topBarStroke.Transparency = 0.5
+    topBarStroke.Parent = window.Topbar
+    
     window.TitleLabel = Instance.new("TextLabel")
     window.TitleLabel.Name = "Title"
-    window.TitleLabel.Size = UDim2.new(1, -40, 1, 0)
-    window.TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+    window.TitleLabel.Size = UDim2.new(1, -80, 1, 0)
+    window.TitleLabel.Position = UDim2.new(0, 15, 0, 0)
     window.TitleLabel.BackgroundTransparency = 1
     window.TitleLabel.Text = window.Title
-    window.TitleLabel.TextColor3 = Library.Themes[Library.CurrentTheme].Text
+    window.TitleLabel.TextColor3 = Library.Themes[Library.CurrentTheme].Accent
     window.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    window.TitleLabel.Font = Enum.Font.GothamSemibold
+    window.TitleLabel.Font = Enum.Font.GothamBold
     window.TitleLabel.TextSize = 16
     window.TitleLabel.Parent = window.Topbar
     
+    window.FooterLabel = Instance.new("TextLabel")
+    window.FooterLabel.Name = "Footer"
+    window.FooterLabel.Size = UDim2.new(1, -80, 1, 0)
+    window.FooterLabel.Position = UDim2.new(0, 15, 0, 0)
+    window.FooterLabel.BackgroundTransparency = 1
+    window.FooterLabel.Text = window.Footer
+    window.FooterLabel.TextColor3 = Library.Themes[Library.CurrentTheme].TextDisabled
+    window.FooterLabel.TextXAlignment = Enum.TextXAlignment.Right
+    window.FooterLabel.Font = Enum.Font.Gotham
+    window.FooterLabel.TextSize = 12
+    window.FooterLabel.Visible = false
+    window.FooterLabel.Parent = window.Topbar
+    
     window.CloseButton = Instance.new("TextButton")
     window.CloseButton.Name = "CloseButton"
-    window.CloseButton.Size = UDim2.new(0, 30, 1, 0)
-    window.CloseButton.Position = UDim2.new(1, -30, 0, 0)
+    window.CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    window.CloseButton.Position = UDim2.new(1, -35, 0.5, -15)
     window.CloseButton.BackgroundTransparency = 1
     window.CloseButton.Text = "✕"
     window.CloseButton.TextColor3 = Library.Themes[Library.CurrentTheme].Text
-    window.CloseButton.Font = Enum.Font.GothamSemibold
-    window.CloseButton.TextSize = 20
+    window.CloseButton.Font = Enum.Font.GothamBold
+    window.CloseButton.TextSize = 18
     window.CloseButton.Parent = window.Topbar
     
     window.CloseButton.MouseButton1Click:Connect(function()
         window.Main.Visible = not window.Main.Visible
     end)
     
+    window.CloseButton.MouseEnter:Connect(function()
+        window.CloseButton.TextColor3 = Library.Themes[Library.CurrentTheme].Red
+    end)
+    
+    window.CloseButton.MouseLeave:Connect(function()
+        window.CloseButton.TextColor3 = Library.Themes[Library.CurrentTheme].Text
+    end)
+    
     window.TabContainer = Instance.new("Frame")
     window.TabContainer.Name = "TabContainer"
-    window.TabContainer.Size = UDim2.new(1, 0, 0, 30)
-    window.TabContainer.Position = UDim2.new(0, 0, 0, 30)
+    window.TabContainer.Size = UDim2.new(1, 0, 0, 35)
+    window.TabContainer.Position = UDim2.new(0, 0, 0, 35)
     window.TabContainer.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Background
     window.TabContainer.BorderSizePixel = 0
     window.TabContainer.Parent = window.Main
+    
+    local tabStroke = Instance.new("UIStroke")
+    tabStroke.Thickness = 1
+    tabStroke.Color = Library.Themes[Library.CurrentTheme].Element
+    tabStroke.Transparency = 0.7
+    tabStroke.Parent = window.TabContainer
     
     window.TabList = Instance.new("UIListLayout")
     window.TabList.FillDirection = Enum.FillDirection.Horizontal
@@ -132,12 +176,24 @@ function Library:CreateWindow(options)
     window.TabList.Padding = UDim.new(0, 5)
     window.TabList.Parent = window.TabContainer
     
+    local tabPadding = Instance.new("UIPadding")
+    tabPadding.PaddingLeft = UDim.new(0, 10)
+    tabPadding.PaddingRight = UDim.new(0, 10)
+    tabPadding.Parent = window.TabContainer
+    
     window.PageContainer = Instance.new("Frame")
     window.PageContainer.Name = "PageContainer"
-    window.PageContainer.Size = UDim2.new(1, 0, 1, -60)
-    window.PageContainer.Position = UDim2.new(0, 0, 0, 60)
+    window.PageContainer.Size = UDim2.new(1, 0, 1, -70)
+    window.PageContainer.Position = UDim2.new(0, 0, 0, 70)
     window.PageContainer.BackgroundTransparency = 1
     window.PageContainer.Parent = window.Main
+    
+    local pagePadding = Instance.new("UIPadding")
+    pagePadding.PaddingLeft = UDim.new(0, 10)
+    pagePadding.PaddingRight = UDim.new(0, 10)
+    pagePadding.PaddingTop = UDim.new(0, 10)
+    pagePadding.PaddingBottom = UDim.new(0, 10)
+    pagePadding.Parent = window.PageContainer
     
     window.Tabs = {}
     window.Pages = {}
@@ -145,27 +201,29 @@ function Library:CreateWindow(options)
     function window:AddTab(name, icon)
         local tab = {}
         tab.Name = name
-        tab.Icon = icon or "★"
+        tab.Icon = icon or "●"
         tab.Buttons = {}
         
         tab.Button = Instance.new("TextButton")
         tab.Button.Name = name .. "Button"
-        tab.Button.Size = UDim2.new(0, 80, 0, 25)
-        tab.Button.Position = UDim2.new(0, #window.Tabs * 85, 0, 2.5)
+        tab.Button.Size = UDim2.new(0, 90, 0, 28)
         tab.Button.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element
-        tab.Button.Text = tab.Icon .. " " .. name
+        tab.Button.Text = tab.Icon .. "  " .. name
         tab.Button.TextColor3 = Library.Themes[Library.CurrentTheme].Text
-        tab.Button.Font = Enum.Font.Gotham
-        tab.Button.TextSize = 14
+        tab.Button.Font = Enum.Font.GothamSemibold
+        tab.Button.TextSize = 13
         tab.Button.Parent = window.TabContainer
+        
+        local buttonCorner = Instance.new("UICorner")
+        buttonCorner.CornerRadius = UDim.new(0, 6)
+        buttonCorner.Parent = tab.Button
         
         tab.Page = Instance.new("ScrollingFrame")
         tab.Page.Name = name .. "Page"
-        tab.Page.Size = UDim2.new(1, -20, 1, -20)
-        tab.Page.Position = UDim2.new(0, 10, 0, 10)
+        tab.Page.Size = UDim2.new(1, 0, 1, 0)
         tab.Page.BackgroundTransparency = 1
         tab.Page.BorderSizePixel = 0
-        tab.Page.ScrollBarThickness = 5
+        tab.Page.ScrollBarThickness = 4
         tab.Page.ScrollBarImageColor3 = Library.Themes[Library.CurrentTheme].Accent
         tab.Page.CanvasSize = UDim2.new(0, 0, 0, 0)
         tab.Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -173,7 +231,7 @@ function Library:CreateWindow(options)
         tab.Page.Parent = window.PageContainer
         
         tab.Layout = Instance.new("UIListLayout")
-        tab.Layout.FillDirection = Enum.FillDirection.Vertical
+        tab.Layout.FillDirection = Enum.FillDirection.Horizontal
         tab.Layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
         tab.Layout.VerticalAlignment = Enum.VerticalAlignment.Top
         tab.Layout.Padding = UDim.new(0, 10)
@@ -182,10 +240,22 @@ function Library:CreateWindow(options)
         tab.Button.MouseButton1Click:Connect(function()
             for _, otherTab in pairs(window.Tabs) do
                 otherTab.Page.Visible = false
-                otherTab.Button.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element
+                TweenService:Create(otherTab.Button, TweenInfo.new(0.2), {BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element}):Play()
             end
             tab.Page.Visible = true
-            tab.Button.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Accent
+            TweenService:Create(tab.Button, TweenInfo.new(0.2), {BackgroundColor3 = Library.Themes[Library.CurrentTheme].Accent}):Play()
+        end)
+        
+        tab.Button.MouseEnter:Connect(function()
+            if tab.Button.BackgroundColor3 ~= Library.Themes[Library.CurrentTheme].Accent then
+                TweenService:Create(tab.Button, TweenInfo.new(0.2), {BackgroundColor3 = Library.Themes[Library.CurrentTheme].ElementHover}):Play()
+            end
+        end)
+        
+        tab.Button.MouseLeave:Connect(function()
+            if tab.Button.BackgroundColor3 ~= Library.Themes[Library.CurrentTheme].Accent then
+                TweenService:Create(tab.Button, TweenInfo.new(0.2), {BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element}):Play()
+            end
         end)
         
         function tab:AddLeftGroupbox(name, icon)
@@ -199,34 +269,44 @@ function Library:CreateWindow(options)
         function tab:CreateGroupbox(name, icon, side)
             local groupbox = {}
             groupbox.Name = name
-            groupbox.Icon = icon or "📦"
+            groupbox.Icon = icon or "□"
             groupbox.Side = side
             groupbox.Elements = {}
             
             groupbox.Frame = Instance.new("Frame")
             groupbox.Frame.Name = name .. "Groupbox"
-            groupbox.Frame.Size = UDim2.new(side == "Left" and 0.48 or 0.48, 0, 0, 0)
+            groupbox.Frame.Size = UDim2.new(side == "Left" and 0.5 or 0.5, -5, 0, 0)
             groupbox.Frame.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Background
             groupbox.Frame.BorderSizePixel = 0
             groupbox.Frame.AutomaticSize = Enum.AutomaticSize.Y
             groupbox.Frame.Parent = tab.Page
             
+            local groupCorner = Instance.new("UICorner")
+            groupCorner.CornerRadius = UDim.new(0, 8)
+            groupCorner.Parent = groupbox.Frame
+            
+            local groupStroke = Instance.new("UIStroke")
+            groupStroke.Thickness = 1
+            groupStroke.Color = Library.Themes[Library.CurrentTheme].Element
+            groupStroke.Transparency = 0.5
+            groupStroke.Parent = groupbox.Frame
+            
             groupbox.Title = Instance.new("TextLabel")
             groupbox.Title.Name = "Title"
-            groupbox.Title.Size = UDim2.new(1, -20, 0, 25)
+            groupbox.Title.Size = UDim2.new(1, -20, 0, 30)
             groupbox.Title.Position = UDim2.new(0, 10, 0, 5)
             groupbox.Title.BackgroundTransparency = 1
-            groupbox.Title.Text = groupbox.Icon .. " " .. groupbox.Name
+            groupbox.Title.Text = groupbox.Icon .. "  " .. groupbox.Name
             groupbox.Title.TextColor3 = Library.Themes[Library.CurrentTheme].Accent
             groupbox.Title.TextXAlignment = Enum.TextXAlignment.Left
-            groupbox.Title.Font = Enum.Font.GothamSemibold
+            groupbox.Title.Font = Enum.Font.GothamBold
             groupbox.Title.TextSize = 15
             groupbox.Title.Parent = groupbox.Frame
             
             groupbox.Container = Instance.new("Frame")
             groupbox.Container.Name = "Container"
             groupbox.Container.Size = UDim2.new(1, -20, 0, 0)
-            groupbox.Container.Position = UDim2.new(0, 10, 0, 30)
+            groupbox.Container.Position = UDim2.new(0, 10, 0, 35)
             groupbox.Container.BackgroundTransparency = 1
             groupbox.Container.AutomaticSize = Enum.AutomaticSize.Y
             groupbox.Container.Parent = groupbox.Frame
@@ -235,7 +315,7 @@ function Library:CreateWindow(options)
             groupbox.Layout.FillDirection = Enum.FillDirection.Vertical
             groupbox.Layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
             groupbox.Layout.VerticalAlignment = Enum.VerticalAlignment.Top
-            groupbox.Layout.Padding = UDim.new(0, 5)
+            groupbox.Layout.Padding = UDim.new(0, 6)
             groupbox.Layout.Parent = groupbox.Container
             
             function groupbox:AddToggle(idx, options)
@@ -266,6 +346,10 @@ function Library:CreateWindow(options)
                 return self:CreateDivider()
             end
             
+            function groupbox:AddKeyPicker(idx, options)
+                return self:CreateKeyPicker(idx, options)
+            end
+            
             function groupbox:CreateToggle(idx, options)
                 local toggle = {}
                 toggle.Idx = idx
@@ -277,30 +361,37 @@ function Library:CreateWindow(options)
                 
                 toggle.Frame = Instance.new("Frame")
                 toggle.Frame.Name = idx .. "Toggle"
-                toggle.Frame.Size = UDim2.new(1, 0, 0, 25)
+                toggle.Frame.Size = UDim2.new(1, 0, 0, 28)
                 toggle.Frame.BackgroundTransparency = 1
                 toggle.Frame.Parent = groupbox.Container
                 
                 toggle.Button = Instance.new("TextButton")
                 toggle.Button.Name = "Button"
-                toggle.Button.Size = UDim2.new(0, 40, 0, 20)
-                toggle.Button.Position = UDim2.new(0, 0, 0.5, -10)
+                toggle.Button.Size = UDim2.new(0, 44, 0, 22)
+                toggle.Button.Position = UDim2.new(0, 0, 0.5, -11)
                 toggle.Button.BackgroundColor3 = toggle.Value and Library.Themes[Library.CurrentTheme].Green or Library.Themes[Library.CurrentTheme].Red
                 toggle.Button.Text = ""
                 toggle.Button.Parent = toggle.Frame
                 
+                local buttonCorner = Instance.new("UICorner")
+                buttonCorner.CornerRadius = UDim.new(1, 0)
+                buttonCorner.Parent = toggle.Button
+                
                 toggle.Indicator = Instance.new("Frame")
                 toggle.Indicator.Name = "Indicator"
-                toggle.Indicator.Size = UDim2.new(0, 16, 0, 16)
-                toggle.Indicator.Position = toggle.Value and UDim2.new(0, 22, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+                toggle.Indicator.Size = UDim2.new(0, 18, 0, 18)
+                toggle.Indicator.Position = toggle.Value and UDim2.new(0, 24, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
                 toggle.Indicator.BackgroundColor3 = Color3.new(1, 1, 1)
                 toggle.Indicator.Parent = toggle.Button
                 
-
+                local indicatorCorner = Instance.new("UICorner")
+                indicatorCorner.CornerRadius = UDim.new(1, 0)
+                indicatorCorner.Parent = toggle.Indicator
+                
                 toggle.TextLabel = Instance.new("TextLabel")
                 toggle.TextLabel.Name = "Text"
-                toggle.TextLabel.Size = UDim2.new(1, -45, 1, 0)
-                toggle.TextLabel.Position = UDim2.new(0, 45, 0, 0)
+                toggle.TextLabel.Size = UDim2.new(1, -50, 1, 0)
+                toggle.TextLabel.Position = UDim2.new(0, 50, 0, 0)
                 toggle.TextLabel.BackgroundTransparency = 1
                 toggle.TextLabel.Text = toggle.Text
                 toggle.TextLabel.TextColor3 = Library.Themes[Library.CurrentTheme].Text
@@ -309,38 +400,33 @@ function Library:CreateWindow(options)
                 toggle.TextLabel.TextSize = 14
                 toggle.TextLabel.Parent = toggle.Frame
                 
- 
                 function toggle:SetValue(value)
                     self.Value = value
                     self.Button.BackgroundColor3 = value and Library.Themes[Library.CurrentTheme].Green or Library.Themes[Library.CurrentTheme].Red
-                    self.Indicator.Position = value and UDim2.new(0, 22, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+                    self.Indicator.Position = value and UDim2.new(0, 24, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
                     self.Callback(value)
                     Toggles[idx] = self
                 end
                 
-
                 toggle.Button.MouseButton1Click:Connect(function()
                     toggle:SetValue(not toggle.Value)
                 end)
                 
-
                 toggle:SetValue(toggle.Default)
                 
                 getgenv().Toggles[idx] = toggle
                 return toggle
             end
             
-
             function groupbox:CreateButton(options)
                 local button = {}
                 button.Text = options.Text or "Button"
                 button.Func = options.Func or function() end
                 button.Tooltip = options.Tooltip or ""
                 
-
                 button.Button = Instance.new("TextButton")
                 button.Button.Name = button.Text .. "Button"
-                button.Button.Size = UDim2.new(1, 0, 0, 25)
+                button.Button.Size = UDim2.new(1, 0, 0, 30)
                 button.Button.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element
                 button.Button.Text = button.Text
                 button.Button.TextColor3 = Library.Themes[Library.CurrentTheme].Text
@@ -348,16 +434,20 @@ function Library:CreateWindow(options)
                 button.Button.TextSize = 14
                 button.Button.Parent = groupbox.Container
                 
+                local buttonCorner = Instance.new("UICorner")
+                buttonCorner.CornerRadius = UDim.new(0, 6)
+                buttonCorner.Parent = button.Button
+                
                 button.Button.MouseButton1Click:Connect(function()
                     button.Func()
                 end)
                 
                 button.Button.MouseEnter:Connect(function()
-                    button.Button.BackgroundColor3 = Library.Themes[Library.CurrentTheme].ElementHover
+                    TweenService:Create(button.Button, TweenInfo.new(0.2), {BackgroundColor3 = Library.Themes[Library.CurrentTheme].ElementHover}):Play()
                 end)
                 
                 button.Button.MouseLeave:Connect(function()
-                    button.Button.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element
+                    TweenService:Create(button.Button, TweenInfo.new(0.2), {BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element}):Play()
                 end)
                 
                 function button:AddButton(subOptions)
@@ -367,7 +457,6 @@ function Library:CreateWindow(options)
                 return button
             end
             
-
             function groupbox:CreateSlider(idx, options)
                 local slider = {}
                 slider.Idx = idx
@@ -380,14 +469,12 @@ function Library:CreateWindow(options)
                 slider.Suffix = options.Suffix or ""
                 slider.Callback = options.Callback or function() end
                 
-
                 slider.Frame = Instance.new("Frame")
                 slider.Frame.Name = idx .. "Slider"
-                slider.Frame.Size = UDim2.new(1, 0, 0, 40)
+                slider.Frame.Size = UDim2.new(1, 0, 0, 45)
                 slider.Frame.BackgroundTransparency = 1
                 slider.Frame.Parent = groupbox.Container
                 
-    
                 slider.TextLabel = Instance.new("TextLabel")
                 slider.TextLabel.Name = "Text"
                 slider.TextLabel.Size = UDim2.new(1, -50, 0, 20)
@@ -400,22 +487,39 @@ function Library:CreateWindow(options)
                 slider.TextLabel.TextSize = 14
                 slider.TextLabel.Parent = slider.Frame
                 
-
+                slider.ValueLabel = Instance.new("TextLabel")
+                slider.ValueLabel.Name = "Value"
+                slider.ValueLabel.Size = UDim2.new(0, 50, 0, 20)
+                slider.ValueLabel.Position = UDim2.new(1, -50, 0, 0)
+                slider.ValueLabel.BackgroundTransparency = 1
+                slider.ValueLabel.Text = slider.Value .. slider.Suffix
+                slider.ValueLabel.TextColor3 = Library.Themes[Library.CurrentTheme].Accent
+                slider.ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+                slider.ValueLabel.Font = Enum.Font.GothamBold
+                slider.ValueLabel.TextSize = 14
+                slider.ValueLabel.Parent = slider.Frame
+                
                 slider.Slider = Instance.new("Frame")
                 slider.Slider.Name = "Slider"
-                slider.Slider.Size = UDim2.new(1, 0, 0, 10)
+                slider.Slider.Size = UDim2.new(1, 0, 0, 6)
                 slider.Slider.Position = UDim2.new(0, 0, 0, 25)
                 slider.Slider.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element
                 slider.Slider.Parent = slider.Frame
                 
-
+                local sliderCorner = Instance.new("UICorner")
+                sliderCorner.CornerRadius = UDim.new(1, 0)
+                sliderCorner.Parent = slider.Slider
+                
                 slider.Fill = Instance.new("Frame")
                 slider.Fill.Name = "Fill"
                 slider.Fill.Size = UDim2.new((slider.Value - slider.Min) / (slider.Max - slider.Min), 0, 1, 0)
                 slider.Fill.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Accent
                 slider.Fill.Parent = slider.Slider
                 
-
+                local fillCorner = Instance.new("UICorner")
+                fillCorner.CornerRadius = UDim.new(1, 0)
+                fillCorner.Parent = slider.Fill
+                
                 slider.Drag = Instance.new("TextButton")
                 slider.Drag.Name = "Drag"
                 slider.Drag.Size = UDim2.new(1, 0, 1, 0)
@@ -454,6 +558,7 @@ function Library:CreateWindow(options)
                 function slider:SetValue(value)
                     self.Value = math.clamp(value, self.Min, self.Max)
                     self.TextLabel.Text = self.Text .. ": " .. self.Value .. self.Suffix
+                    self.ValueLabel.Text = self.Value .. self.Suffix
                     self.Fill.Size = UDim2.new((self.Value - self.Min) / (self.Max - self.Min), 0, 1, 0)
                     self.Callback(self.Value)
                     Options[idx] = self
@@ -465,7 +570,6 @@ function Library:CreateWindow(options)
                 return slider
             end
             
-
             function groupbox:CreateDropdown(idx, options)
                 local dropdown = {}
                 dropdown.Idx = idx
@@ -476,14 +580,12 @@ function Library:CreateWindow(options)
                 dropdown.Value = dropdown.Multi and {} or dropdown.Values[dropdown.Default]
                 dropdown.Callback = options.Callback or function() end
                 
-    
                 dropdown.Frame = Instance.new("Frame")
                 dropdown.Frame.Name = idx .. "Dropdown"
                 dropdown.Frame.Size = UDim2.new(1, 0, 0, 30)
                 dropdown.Frame.BackgroundTransparency = 1
                 dropdown.Frame.Parent = groupbox.Container
                 
-
                 dropdown.TextLabel = Instance.new("TextLabel")
                 dropdown.TextLabel.Name = "Text"
                 dropdown.TextLabel.Size = UDim2.new(0, 80, 1, 0)
@@ -495,7 +597,6 @@ function Library:CreateWindow(options)
                 dropdown.TextLabel.TextSize = 14
                 dropdown.TextLabel.Parent = dropdown.Frame
                 
- 
                 dropdown.Button = Instance.new("TextButton")
                 dropdown.Button.Name = "Button"
                 dropdown.Button.Size = UDim2.new(1, -85, 1, 0)
@@ -507,18 +608,29 @@ function Library:CreateWindow(options)
                 dropdown.Button.TextSize = 14
                 dropdown.Button.Parent = dropdown.Frame
                 
-    
+                local buttonCorner = Instance.new("UICorner")
+                buttonCorner.CornerRadius = UDim.new(0, 6)
+                buttonCorner.Parent = dropdown.Button
+                
                 dropdown.Menu = Instance.new("ScrollingFrame")
                 dropdown.Menu.Name = "Menu"
                 dropdown.Menu.Size = UDim2.new(1, -85, 0, 0)
-                dropdown.Menu.Position = UDim2.new(0, 85, 1, 0)
+                dropdown.Menu.Position = UDim2.new(0, 85, 1, 2)
                 dropdown.Menu.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element
                 dropdown.Menu.BorderSizePixel = 0
                 dropdown.Menu.Visible = false
                 dropdown.Menu.AutomaticSize = Enum.AutomaticSize.Y
                 dropdown.Menu.Parent = dropdown.Frame
                 
-    
+                local menuCorner = Instance.new("UICorner")
+                menuCorner.CornerRadius = UDim.new(0, 6)
+                menuCorner.Parent = dropdown.Menu
+                
+                local menuPadding = Instance.new("UIPadding")
+                menuPadding.PaddingTop = UDim.new(0, 4)
+                menuPadding.PaddingBottom = UDim.new(0, 4)
+                menuPadding.Parent = dropdown.Menu
+                
                 for i, value in ipairs(dropdown.Values) do
                     local item = Instance.new("TextButton")
                     item.Name = value .. "Item"
@@ -569,7 +681,6 @@ function Library:CreateWindow(options)
                 return dropdown
             end
             
-       
             function groupbox:CreateInput(idx, options)
                 local input = {}
                 input.Idx = idx
@@ -580,14 +691,12 @@ function Library:CreateWindow(options)
                 input.Numeric = options.Numeric or false
                 input.Callback = options.Callback or function() end
                 
-         
                 input.Frame = Instance.new("Frame")
                 input.Frame.Name = idx .. "Input"
                 input.Frame.Size = UDim2.new(1, 0, 0, 30)
                 input.Frame.BackgroundTransparency = 1
                 input.Frame.Parent = groupbox.Container
                 
-
                 input.TextLabel = Instance.new("TextLabel")
                 input.TextLabel.Name = "Text"
                 input.TextLabel.Size = UDim2.new(0, 80, 1, 0)
@@ -599,7 +708,6 @@ function Library:CreateWindow(options)
                 input.TextLabel.TextSize = 14
                 input.TextLabel.Parent = input.Frame
                 
-
                 input.Box = Instance.new("TextBox")
                 input.Box.Name = "Box"
                 input.Box.Size = UDim2.new(1, -85, 1, 0)
@@ -613,6 +721,10 @@ function Library:CreateWindow(options)
                 input.Box.TextSize = 14
                 input.Box.ClearTextOnFocus = false
                 input.Box.Parent = input.Frame
+                
+                local boxCorner = Instance.new("UICorner")
+                boxCorner.CornerRadius = UDim.new(0, 6)
+                boxCorner.Parent = input.Box
                 
                 input.Box.FocusLost:Connect(function(enterPressed)
                     local text = input.Box.Text
@@ -633,13 +745,11 @@ function Library:CreateWindow(options)
                 return input
             end
             
-
             function groupbox:CreateLabel(text, wrap, idx)
                 local label = {}
                 label.Text = text
                 label.Wrap = wrap or false
                 
-
                 label.Label = Instance.new("TextLabel")
                 label.Label.Name = (idx or "Label") .. "Label"
                 label.Label.Size = UDim2.new(1, 0, 0, label.Wrap and 0 or 20)
@@ -648,7 +758,7 @@ function Library:CreateWindow(options)
                 label.Label.TextColor3 = Library.Themes[Library.CurrentTheme].Text
                 label.Label.TextXAlignment = Enum.TextXAlignment.Left
                 label.Label.Font = Enum.Font.Gotham
-                label.Label.TextSize = 14
+                label.Label.TextSize = 13
                 label.Label.TextWrapped = label.Wrap
                 label.Label.AutomaticSize = label.Wrap and Enum.AutomaticSize.Y or Enum.AutomaticSize.None
                 label.Label.Parent = groupbox.Container
@@ -660,11 +770,9 @@ function Library:CreateWindow(options)
                 return label
             end
             
-
             function groupbox:CreateDivider()
                 local divider = {}
                 
-
                 divider.Line = Instance.new("Frame")
                 divider.Line.Name = "Divider"
                 divider.Line.Size = UDim2.new(1, 0, 0, 1)
@@ -675,6 +783,82 @@ function Library:CreateWindow(options)
                 return divider
             end
             
+            function groupbox:CreateKeyPicker(idx, options)
+                local keypicker = {}
+                keypicker.Idx = idx
+                keypicker.Text = options.Text or "Keybind"
+                keypicker.Default = options.Default or "None"
+                keypicker.Value = keypicker.Default
+                keypicker.Callback = options.Callback or function() end
+                keypicker.ChangedCallback = options.ChangedCallback or function() end
+                
+                keypicker.Frame = Instance.new("Frame")
+                keypicker.Frame.Name = idx .. "KeyPicker"
+                keypicker.Frame.Size = UDim2.new(1, 0, 0, 30)
+                keypicker.Frame.BackgroundTransparency = 1
+                keypicker.Frame.Parent = groupbox.Container
+                
+                keypicker.TextLabel = Instance.new("TextLabel")
+                keypicker.TextLabel.Name = "Text"
+                keypicker.TextLabel.Size = UDim2.new(1, -100, 1, 0)
+                keypicker.TextLabel.BackgroundTransparency = 1
+                keypicker.TextLabel.Text = keypicker.Text
+                keypicker.TextLabel.TextColor3 = Library.Themes[Library.CurrentTheme].Text
+                keypicker.TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+                keypicker.TextLabel.Font = Enum.Font.Gotham
+                keypicker.TextLabel.TextSize = 14
+                keypicker.TextLabel.Parent = keypicker.Frame
+                
+                keypicker.Button = Instance.new("TextButton")
+                keypicker.Button.Name = "Button"
+                keypicker.Button.Size = UDim2.new(0, 90, 1, 0)
+                keypicker.Button.Position = UDim2.new(1, -90, 0, 0)
+                keypicker.Button.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Element
+                keypicker.Button.Text = keypicker.Value
+                keypicker.Button.TextColor3 = Library.Themes[Library.CurrentTheme].Text
+                keypicker.Button.Font = Enum.Font.Gotham
+                keypicker.Button.TextSize = 14
+                keypicker.Button.Parent = keypicker.Frame
+                
+                local buttonCorner = Instance.new("UICorner")
+                buttonCorner.CornerRadius = UDim.new(0, 6)
+                buttonCorner.Parent = keypicker.Button
+                
+                local listening = false
+                
+                keypicker.Button.MouseButton1Click:Connect(function()
+                    listening = true
+                    keypicker.Button.Text = "..."
+                end)
+                
+                UIS.InputBegan:Connect(function(input)
+                    if listening then
+                        local key = input.KeyCode.Name
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            key = "MB1"
+                        elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+                            key = "MB2"
+                        elseif input.UserInputType == Enum.UserInputType.MouseButton3 then
+                            key = "MB3"
+                        end
+                        
+                        if key then
+                            keypicker.Value = key
+                            keypicker.Button.Text = key
+                            keypicker.ChangedCallback(key)
+                            listening = false
+                        end
+                    end
+                end)
+                
+                function keypicker:GetState()
+                    return UIS:IsKeyDown(Enum.KeyCode[self.Value]) or UIS:IsMouseButtonPressed(Enum.UserInputType[self.Value])
+                end
+                
+                getgenv().Options[idx] = keypicker
+                return keypicker
+            end
+            
             table.insert(groupbox.Elements, groupbox)
             return groupbox
         end
@@ -683,7 +867,6 @@ function Library:CreateWindow(options)
         return tab
     end
     
-
     function Library:Notify(options)
         options = options or {}
         local title = options.Title or "Notification"
@@ -699,6 +882,16 @@ function Library:CreateWindow(options)
         notification.AutomaticSize = Enum.AutomaticSize.Y
         notification.Parent = window.Gui
         
+        local notifCorner = Instance.new("UICorner")
+        notifCorner.CornerRadius = UDim.new(0, 8)
+        notifCorner.Parent = notification
+        
+        local notifStroke = Instance.new("UIStroke")
+        notifStroke.Thickness = 1
+        notifStroke.Color = Library.Themes[Library.CurrentTheme].Accent
+        notifStroke.Transparency = 0.5
+        notifStroke.Parent = notification
+        
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Name = "Title"
         titleLabel.Size = UDim2.new(1, -20, 0, 25)
@@ -707,8 +900,8 @@ function Library:CreateWindow(options)
         titleLabel.Text = title
         titleLabel.TextColor3 = Library.Themes[Library.CurrentTheme].Accent
         titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-        titleLabel.Font = Enum.Font.GothamSemibold
-        titleLabel.TextSize = 16
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.TextSize = 15
         titleLabel.Parent = notification
         
         local descLabel = Instance.new("TextLabel")
@@ -720,22 +913,37 @@ function Library:CreateWindow(options)
         descLabel.TextColor3 = Library.Themes[Library.CurrentTheme].Text
         descLabel.TextXAlignment = Enum.TextXAlignment.Left
         descLabel.Font = Enum.Font.Gotham
-        descLabel.TextSize = 14
+        descLabel.TextSize = 13
         descLabel.TextWrapped = true
         descLabel.AutomaticSize = Enum.AutomaticSize.Y
         descLabel.Parent = notification
         
         notification.Size = UDim2.new(0, 300, 0, descLabel.AbsoluteSize.Y + 40)
         
-        task.delay(time, function()
+        notification.Position = window.NotifySide == "Right" and UDim2.new(1, -310, 1, -notification.AbsoluteSize.Y - 10) or UDim2.new(0, 10, 1, -notification.AbsoluteSize.Y - 10)
+        
+        local function slideIn()
+            local targetPos = notification.Position
+            notification.Position = window.NotifySide == "Right" and UDim2.new(1, -10, 1, -notification.AbsoluteSize.Y - 10) or UDim2.new(0, -300, 1, -notification.AbsoluteSize.Y - 10)
+            TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPos}):Play()
+        end
+        
+        local function slideOut()
+            local targetPos = window.NotifySide == "Right" and UDim2.new(1, 10, 1, -notification.AbsoluteSize.Y - 10) or UDim2.new(0, -310, 1, -notification.AbsoluteSize.Y - 10)
+            TweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = targetPos}):Play()
+            task.wait(0.3)
             notification:Destroy()
-        end)
+        end
+        
+        slideIn()
+        task.delay(time, slideOut)
     end
     
-
     local function startDrag(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            window.Dragging = { true, input.Position - window.Main.AbsolutePosition }
+            window.Dragging[1] = true
+            window.Dragging[2].x = input.Position.X - window.Main.AbsolutePosition.X
+            window.Dragging[2].y = input.Position.Y - window.Main.AbsolutePosition.Y
         end
     end
     
@@ -747,19 +955,16 @@ function Library:CreateWindow(options)
     
     local function doDrag(input)
         if window.Dragging[1] and input.UserInputType == Enum.UserInputType.MouseMovement then
-            window.Main.Position = UDim2.new(0, input.Position.X - window.Dragging[2].X, 0, input.Position.Y - window.Dragging[2].Y)
+            window.Main.Position = UDim2.new(0, input.Position.X - window.Dragging[2].x, 0, input.Position.Y - window.Dragging[2].y)
         end
     end
     
     window.Topbar.InputBegan:Connect(startDrag)
     window.Topbar.InputEnded:Connect(stopDrag)
-    window.Topbar.InputChanged:Connect(doDrag)
-    
     UIS.InputChanged:Connect(doDrag)
     
     return window
 end
-
 
 local SaveManager = {}
 SaveManager.Library = Library
@@ -778,7 +983,6 @@ function SaveManager:SetFolder(folder)
 end
 
 function SaveManager:IgnoreThemeSettings()
-
 end
 
 function SaveManager:SetIgnoreIndexes(indexes)
@@ -926,7 +1130,6 @@ end
 
 Library.SaveManager = SaveManager
 
-
 local ThemeManager = {}
 ThemeManager.Library = Library
 
@@ -935,7 +1138,6 @@ function ThemeManager:SetLibrary(library)
 end
 
 function ThemeManager:SetFolder(folder)
-
 end
 
 function ThemeManager:ApplyToTab(tab)
@@ -952,7 +1154,6 @@ function ThemeManager:ApplyToTab(tab)
         Default = Library.CurrentTheme,
         Callback = function(value)
             Library.CurrentTheme = value
-
         end
     })
 end
